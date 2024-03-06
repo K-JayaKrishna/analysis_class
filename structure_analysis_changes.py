@@ -273,8 +273,14 @@ class initial():
 
                 for i in range(self.nreps):
 
-                    if i == 0 : trajectory=f"{rep_trajectory}/{self.traj_tag_in}.{self.traj_type}"
-                    else : trajectory=f"{rep_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}"
+                    if i == 0 : 
+                        if os.path.exists(f"{rep_trajectory}/{self.traj_tag_in}.{self.traj_type}") : trajectory=f"{rep_trajectory}/{self.traj_tag_in}.{self.traj_type}"
+                        else : print(f"{self.traj_tag_in}.{self.traj_type} is missing...\n")
+
+                    else : 
+                        if os.path.exists(f"{rep_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}") : trajectory=f"{rep_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}"
+                        elif os.path.exists(f"{rep_trajectory}/{i}{self.traj_tag_in}.{self.traj_type}") : trajectory=f"{rep_trajectory}/{i}{self.traj_tag_in}.{self.traj_type}"
+                        else : print(f"{self.traj_tag_in} {self.traj_type} is missing...\n")
 
                     # print(f"Loading trajectory {i}!!\n")
 
@@ -301,8 +307,14 @@ class initial():
 
                 for i in range(self.nreps):
 
-                    if i == 0 : trajectory=f"{rep_trajectory}/{self.traj_tag_in}.{self.traj_type}"
-                    else : trajectory=f"{rep_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}"
+                    if i == 0 : 
+                        if os.path.exists(f"{rep_trajectory}/{self.traj_tag_in}.{self.traj_type}") : trajectory=f"{rep_trajectory}/{self.traj_tag_in}.{self.traj_type}"
+                        else : print(f"{self.traj_tag_in}.{self.traj_type} is missing...\n")
+
+                    else : 
+                        if os.path.exists(f"{rep_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}") : trajectory=f"{rep_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}" 
+                        elif os.path.exists(f"{rep_trajectory}/{i}{self.traj_tag_in}.{self.traj_type}") : trajectory=f"{rep_trajectory}/{i}{self.traj_tag_in}.{self.traj_type}"
+                        else : print(f"{self.traj_tag_in} {self.traj_type} is missing...\n")
 
                     args_dict={'trajectory':trajectory,
                                 'pdb':pdb,
@@ -322,8 +334,11 @@ class initial():
 
                 for i in range(self.nreps):
 
-                    if i == 0 : trajectory=f"{rep_trajectory}/{self.traj_tag_out}.{self.traj_type}"
+                    if i == 0 :  trajectory=f"{rep_trajectory}/{self.traj_tag_out}.{self.traj_type}"
                     else : trajectory=f"{rep_trajectory}/{self.traj_tag_out}{i}.{self.traj_type}"
+
+                    # if i == 0 : trajectory=f"{rep_trajectory}/{self.traj_tag_out}.{self.traj_type}"
+                    # else : trajectory=f"{rep_trajectory}/{self.traj_tag_out}{i}.{self.traj_type}"
 
                     self.trj_dict[i]=trajectory
 
@@ -356,8 +371,15 @@ class initial():
 
                     for i in range(self.nreps):
 
-                        if trj_type=="rep" : trajectory=f"{rep_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}"
-                        elif trj_type=="demux" : trajectory=f"{demux_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}"
+                        if trj_type=="rep" : 
+                            if os.path.exists(f"{rep_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}") : trajectory=f"{rep_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}"
+                            elif os.path.exists(f"{rep_trajectory}/{i}{self.traj_tag_in}.{self.traj_type}") : trajectory=f"{rep_trajectory}/{i}{self.traj_tag_in}.{self.traj_type}"
+                            else : print(f"{self.traj_tag_in} {self.traj_type} is missing...\n")
+
+                        elif trj_type=="demux" : 
+                            if os.path.exists(f"{demux_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}") : trajectory=f"{demux_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}"
+                            elif os.path.exists(f"{demux_trajectory}/{i}{self.traj_tag_in}.{self.traj_type}") : trajectory=f"{demux_trajectory}/{i}{self.traj_tag_in}.{self.traj_type}"
+                            else : print(f"{self.traj_tag_in} {self.traj_type} is missing...\n")
 
                         k=f"{trj_type}:{i}"
 
@@ -385,8 +407,19 @@ class initial():
 
                     for i in range(self.nreps):
 
-                        if trj_type=="rep" : trajectory=f"{rep_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}" ; out_dir=rep_trajectory
-                        elif trj_type=="demux" : trajectory=f"{demux_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}" ; out_dir = demux_trajectory
+
+                        if trj_type=="rep" : 
+                            if os.path.exists(f"{rep_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}") : trajectory=f"{rep_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}" ; out_dir=rep_trajectory
+                            elif os.path.exists(f"{rep_trajectory}/{i}{self.traj_tag_in}.{self.traj_type}") : trajectory=f"{rep_trajectory}/{i}{self.traj_tag_in}.{self.traj_type}" ; out_dir=rep_trajectory
+                            else : print(f"{self.traj_tag_in} {self.traj_type} is missing...\n")
+
+                        elif trj_type=="demux" : 
+                            if os.path.exists(f"{demux_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}") : trajectory=f"{demux_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}" ; out_dir=demux_trajectory
+                            elif os.path.exists(f"{demux_trajectory}/{i}{self.traj_tag_in}.{self.traj_type}") : trajectory=f"{demux_trajectory}/{i}{self.traj_tag_in}.{self.traj_type}" ; out_dir=demux_trajectory
+                            else : print(f"{self.traj_tag_in} {self.traj_type} is missing...\n")
+
+                        # if trj_type=="rep" : trajectory=f"{rep_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}" ; out_dir=rep_trajectory
+                        # elif trj_type=="demux" : trajectory=f"{demux_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}" ; out_dir = demux_trajectory
 
                         args_dict={'trajectory':trajectory,
                                     'pdb':pdb,
