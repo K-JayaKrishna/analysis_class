@@ -61,14 +61,14 @@ class plots():
         self.nreps = num_of_replicas
         self.replica_temps = self.compute_temperatures(temp_range)
 
-        print(f"Your temperatures are : {np.array(self.replica_temps)}\n")
+        print(f"Your temperatures are : \n{np.array([f'{i:6.3f}' for i in self.replica_temps])}\n")
 
         if rows_cols : self.rows, self.cols = rows_cols['rows'], rows_cols['cols']
         elif not rows_cols : self.cols = 4 ; self.rows = self.nreps//self.cols
 
         if rep_demux_switch == "on" :
 
-            self.s, self.title_names =['rep', 'demux'] , ['Temperature replica', 'Demuxed replica']
+            self.s, self.title_names =['rep', 'demux'] , ['Replica', 'Demuxed replica']
 
         else : pass
 
@@ -78,7 +78,7 @@ class plots():
                               'ba': False}
         self.out_files_dict = {'p_cm' : False, 'l_cm' : False, 'kd' : False, 'ss' : False, 'rg' : False, 'rg_hist' : False, 'kd_time' : False,
                                'lig_contacts' :False, 'lig_modes' : False, 'rg_2d' : False, 'sa' : False, 'pp' : False, 'phipsi' : False,
-                               'ba' : False}
+                               'ba' : False, 'rg_hist_2' : False}
 
         if json_files_dict :
             try : 
@@ -156,12 +156,14 @@ class plots():
                     plot_args:dict = {'vmin': 0.0, 'vmax': 0.5, 'fig_size': (30,14), 'cax_coor': [0.93, 0.2, 0.02, 0.6], 'cmap': 'jet', 'aspect' : 'auto', 'rotation' : {'x' : 90, 'y' :0},
                                       'tick_size' : {'x' : 18, 'y' : 18, 'cax' :25}, 'label_size' : {'x' : 30, 'y' : 30, 'cax' :30}, 'title_size' :20, 'dpi' : 310, 'labels' : {'x' :"Residues", 'y':"Residues" }}):
         import matplotlib.pyplot as plt
-        
+        # [0.93, 0.2, 0.02, 0.6] defult cax
+
         if not demux : s = self.s[0]; title=self.title_names[0]
         elif demux : s=self.s[1]; title=self.title_names[1]
 
         fig, axes = plt.subplots(self.rows,self.cols, figsize=plot_args['fig_size'], sharex=True, sharey=True)
-        cax= fig.add_axes(plot_args['cax_coor'])
+        if plot_args['cax_coor'] : cax= fig.add_axes(plot_args['cax_coor'])
+        else : cax = fig.add_axes([axes[self.rows-1,self.cols-1].get_position().x1+0.02,axes[1,2].get_position().y0,0.02,axes[0,0].get_position().y1-axes[self.rows-1,self.cols-1].get_position().y0])
 
         images=[]
         for i in range(self.nreps):
@@ -672,7 +674,7 @@ class plots():
         elif not demux : 
             out_file = f"{self.out_files_dict['rg_hist']}_rep.{self.out_file_type}"
 
-        in_data= load_json(f"{self.data_dir}/{self.in_files_dict['rg_hist']}")
+        in_data= load_json(f"{self.data_dir}/{self.in_files_dict['rg']}")
 
         self._plot_rg_hist(in_data, out_file, save_fig=save_fig, show_fig=show_fig, demux=demux, plot_args=plot_args)
 
@@ -800,7 +802,8 @@ class plots():
         axes.set_ylabel(plot_args['labels']['y'], size=plot_args['label_size']['y'], labelpad=15)
         axes.set_xlabel(plot_args['labels']['x'], size=plot_args['label_size']['x'], labelpad=15)
         axes.set_ylim(0,1.0)
-        axes.set_xlim(120,141)
+        # axes.set_xlim(120,141)
+        axes.set_xlim(0+self.offset-1,len(self.p_seq)+self.offset)
         axes.set_xticks(range(0+self.offset, len(self.p_seq)+self.offset,2), range(0+self.offset, len(self.p_seq)+self.offset,2))
         axes.legend(loc=plot_args['legend_args']['loc'], fontsize=plot_args['legend_args']['font_size'])
         axes.grid(alpha=0.4)
@@ -818,7 +821,7 @@ class plots():
         ax2.spines['top'].set_visible(True)
         ax2.spines['bottom'].set_position(('outward', 0))
         ax2.spines['bottom'].set_visible(False)
-        ax2.set_xlim(0+self.offset, len(self.p_seq)+self.offset)
+        ax2.set_xlim(0+self.offset-1, len(self.p_seq)+self.offset)
         ax2.set_xticks(range(0+self.offset, len(self.p_seq)+self.offset), self.p_seq_a[::])
         # ax2.set_xticklabels(top_labels)
         ax2.tick_params(axis='x', labelsize=20)
@@ -893,7 +896,7 @@ class plots():
             # axes[p,q].set_ylabel(plot_args['labels']['y'], size=plot_args['label_size']['y'], labelpad=15)
             # axes[p,q].set_xlabel(plot_args['labels']['x'], size=plot_args['label_size']['x'], labelpad=15)
             axes[p,q].set_ylim(0,1.0)
-            axes[p,q].set_xlim(120,141)
+            axes[p,q].set_xlim(0+self.offset-1,len(self.p_seq)+self.offset)
             axes[p,q].set_xticks(range(0+self.offset, len(self.p_seq)+self.offset,2), range(0+self.offset, len(self.p_seq)+self.offset,2))
             # axes[p,q].legend(loc=plot_args['legend_args']['loc'], fontsize=plot_args['legend_args']['font_size'])
             axes[p,q].grid(alpha=0.4)
@@ -910,7 +913,7 @@ class plots():
             ax2.spines['top'].set_visible(True)
             ax2.spines['bottom'].set_position(('outward', 0))
             ax2.spines['bottom'].set_visible(False)
-            ax2.set_xlim(0+self.offset, len(self.p_seq)+self.offset)
+            ax2.set_xlim(0+self.offset-1, len(self.p_seq)+self.offset)
             ax2.set_xticks(range(0+self.offset, len(self.p_seq)+self.offset), self.p_seq_a[::])
             # ax2.set_xticklabels(top_labels)
             ax2.tick_params(axis='x', labelsize=20)
@@ -1156,7 +1159,8 @@ class plots():
         elif demux : s=self.s[1]; title=self.title_names[1]
 
         fig, axes = plt.subplots(self.rows,self.cols, figsize=plot_args['fig_size'], sharex=True, sharey=True)
-        cax= fig.add_axes(plot_args['cax_coor'])
+        if plot_args['cax_coor'] : cax= fig.add_axes(plot_args['cax_coor'])
+        else : cax = fig.add_axes([axes[self.rows-1,self.cols-1].get_position().x1+0.02,axes[1,2].get_position().y0,0.02,axes[0,0].get_position().y1-axes[self.rows-1,self.cols-1].get_position().y0])
 
         images=[]
         for i in range(self.nreps):
@@ -1415,6 +1419,69 @@ class plots():
             in_data[k] = load_json(f"{self.data_dir}/{self.in_files_dict['phipsi'][k]}")
 
         self._plot_phipsi(in_data, out_file, save_fig=save_fig, show_fig=show_fig, demux=demux, plot_args=plot_args)
+
+    def _plot_rg_2(self, input:dict, file_name:str=None, demux:bool=False, save_fig:bool = False, show_fig:bool = False, time_step_in_ps:float=80.0, convolve_step_size:int=200,
+                   plot_args:dict = {'fig_size': (12,8), 'rotation' : {'x' :0, 'y' :0},'tick_size' : {'x' : 25, 'y' : 25},
+                                     'label_size' : {'x' :18, 'y' : 18}, 'dpi' : 310, 'labels' : {'x' :'Replica number', 'y':"Rg (nm)" },
+                                     'title' :{'label' : '', 'size' : 28}, 'legend_args' : {'font_size' : 14, 'loc' : 1, 'ncol':2}}) :
+        
+
+        if not demux : s = self.s[0]; title=self.title_names[0]
+        elif demux : s=self.s[1]; title=self.title_names[1] 
+
+        fig, axes = plt.subplots(1,1,figsize=plot_args['fig_size'])
+
+        for i in range(self.nreps):
+
+            axes.scatter(i,np.mean(np.array(input[f"{s}:{i}"])),color='black')
+            axes.arrow(i, (np.mean(np.array(input[f"{s}:{i}"]))-(np.std(np.array(input[f"{s}:{i}"]))/2)),0,np.std(np.array(input[f"{s}:{i}"])))
+
+        axes.tick_params(labelsize=plot_args['tick_size']['x'])
+        
+        plt.setp(axes.get_xticklabels(), rotation=plot_args['rotation']['x'])
+        axes.set_xticks(range(0,self.nreps,2))
+        axes.set_yticks(np.arange(0.8,1.7,0.1))
+
+        plt.gca().xaxis.set_minor_locator(plt.MultipleLocator(2/2))
+        axes.tick_params(axis='x', which='minor', length=3, width=1, color='k', direction='out')
+
+        plt.gca().yaxis.set_minor_locator(plt.MultipleLocator(0.1/2))
+        axes.tick_params(axis='y', which='minor', length=3, width=1, color='k', direction='out')
+
+        axes.set_ylabel(plot_args['labels']['y'], size=plot_args['label_size']['y'], labelpad=15)
+        axes.set_xlabel(plot_args['labels']['x'], size=plot_args['label_size']['x'], labelpad=15)
+        # axes.set_title(title, size=plot_args['title']['size'])
+        axes.grid(alpha=0.4)
+
+        plt.tight_layout()
+        if show_fig : plt.show()
+        if save_fig : assert file_name ; out_f = f"{self.out_dir}/{file_name}" ; print('saving figure!');plt.savefig(out_f, dpi=plot_args['dpi'],bbox_inches='tight')
+        else : pass
+
+    def plot_rg_2(self, save_fig:bool=False, show_fig:bool=False, demux:bool=False, plot_args_in:dict = {}) : 
+
+        plot_args:dict = {'fig_size': (10,8), 'rotation' : {'x' :0, 'y' :0},'tick_size' : {'x' : 25, 'y' : 25},
+                          'label_size' : {'x' :25, 'y' : 25}, 'dpi' : 310, 'labels' : {'x' :'Replica number', 'y':"Rg (nm)" },
+                          'title' :{'label' : '', 'size' : 28}, 'legend_args' : {'font_size' : 14, 'loc' : 1, 'ncol':2}}
+        
+        if plot_args_in :
+
+            for k in plot_args.keys():
+
+                if k in plot_args_in.keys() : plot_args[k] = plot_args_in[k]
+
+
+        assert self.in_files_dict['rg'] , f"Load the Rg data for the plot!"
+
+        if demux :
+            out_file = f"{self.out_files_dict['rg_hist_2']}_demux.{self.out_file_type}"
+
+        elif not demux : 
+            out_file = f"{self.out_files_dict['rg_hist_2']}_rep.{self.out_file_type}"
+
+        in_data= load_json(f"{self.data_dir}/{self.in_files_dict['rg']}")
+
+        self._plot_rg_2(in_data, out_file, save_fig=save_fig, show_fig=show_fig, demux=demux, plot_args=plot_args)
         
     def _plot_bend_angle(self, input:dict, file_name:str=None, demux:bool=False, save_fig:bool = False, show_fig:bool = False,
                      plot_args:dict = {'fig_size': (10,8), 'rotation' : {'x' : 0, 'y' :0},'tick_size' : {'x' : 20, 'y' : 20},
