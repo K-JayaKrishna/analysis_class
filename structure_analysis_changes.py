@@ -1910,7 +1910,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
 
     def l_cm(self, j):
 
-        if self.w : return contact_map_ligand_rw(self.trj[j],self.prot_start_res_num,self.prot_end_res_num,self.ligand_residue_index,self.weights)
+        if self.w : return contact_map_ligand_rw_2(self.trj[j],self.prot_start_res_num,self.prot_end_res_num,self.ligand_residue_index,self.weights)
         else : return contact_map_ligand_rw_2(self.trj[j],self.prot_start_res_num,self.prot_end_res_num,self.ligand_residue_index)
 
     def write_json_file(self, out_para, out_file:str, write:bool=True ):
