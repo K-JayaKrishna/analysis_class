@@ -1554,36 +1554,66 @@ class hbond(initial):
 
 ## TOMMY rocks ! 
 
-def contact_map_protein_rw(trj, weights:list=[], cutoff:float =1.2, apo:bool=False):
 
-    if not apo : p_residues=trj.topology.n_residues-1
-    elif apo : p_residues=trj.topology.n_residues
+def contact_map_protein_rw(trj, weights:list=[], cutoff:float=1.2, apo:bool=False):
 
-    indices =  np.stack(np.triu_indices(p_residues, 1),1)
+    import numpy as np
+    import mdtraj as md
+    
+    """
+    Compute a reweighted contact map and distance matrix for protein-protein interactions.
+    
+    Parameters:
+    trj : mdtraj.Trajectory
+        The trajectory containing the protein atoms.
+    weights : list or np.ndarray
+        Normalized weights for reweighting the contacts (if provided).
+    cutoff : float
+        Distance cutoff for contact definition in nm.
+    apo : bool
+        If True, uses all residues; if False, excludes the last residue.
+        
+    Returns:
+    np.ndarray
+        Reweighted contact map.
+    """
+    # Determine the number of residues
+    p_residues = trj.topology.n_residues - 1 if not apo else trj.topology.n_residues
+
+    # Generate upper triangle indices for residue pairs
+    indices = np.stack(np.triu_indices(p_residues, 1), axis=1)
+
+    # Compute distances between residue pairs across all frames
+    dist_array = np.array(md.compute_contacts(trj, indices)[0]).astype(float)
+
+    # Identify contacts based on cutoff
+    contact_array = np.where(dist_array < cutoff, 1, 0)
+
+    # Initialize contact and distance matrices
     distance_matrix = np.zeros((p_residues, p_residues))
     contact_matrix = np.zeros((p_residues, p_residues))
 
-    dist_array = np.array(md.compute_contacts(trj, indices)[0]).astype(float)
-    contact_array = np.where(dist_array < cutoff, 1, 0)
+    if len(weights) > 0:
+        # Ensure weights are normalized
+        weights = np.array(weights) / np.sum(weights)
 
-    if len(weights)>0 :
+        # Reweighting contacts and distances
+        reweighted_distances = np.dot(weights, dist_array)  # Reweight distances across frames
+        reweighted_contacts = np.dot(weights, contact_array)  # Reweight contacts across frames
 
-        distance_matrix[indices[:,0],indices[:,1]] = np.dot(dist_array[:,0],weights)
-        distance_matrix += distance_matrix.T
-
-        contact_matrix[indices[:,0],indices[:,1]] = np.dot(contact_array[:,0],weights)
-        contact_matrix += contact_matrix.T
-
-
+        # Fill the upper triangle of the matrices with the reweighted values
+        distance_matrix[indices[:, 0], indices[:, 1]] = reweighted_distances
+        contact_matrix[indices[:, 0], indices[:, 1]] = reweighted_contacts
     else:
+        # Compute mean values without reweighting
+        distance_matrix[indices[:, 0], indices[:, 1]] = dist_array.mean(axis=0)
+        contact_matrix[indices[:, 0], indices[:, 1]] = contact_array.mean(axis=0)
 
-        distance_matrix[indices[:,0],indices[:,1]] = dist_array.mean(0)
-        distance_matrix += distance_matrix.T
+    # Make matrices symmetric
+    distance_matrix += distance_matrix.T
+    contact_matrix += contact_matrix.T
 
-        contact_matrix[indices[:,0],indices[:,1]] = contact_array.mean(0)
-        contact_matrix += contact_matrix.T  
-
-    return np.array(contact_matrix).astype(float), np.array(distance_matrix).astype(float)
+    return np.array(contact_matrix).astype(float)  # , np.array(distance_matrix).astype(float)
 
 
 
