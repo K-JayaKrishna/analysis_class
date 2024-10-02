@@ -1908,7 +1908,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                 write=False
 
         e_time = time.perf_counter()
-        print(f"All Done in {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+        print(f'All Done in {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
         random_quote()
 
