@@ -1823,7 +1823,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
 
                 e_time = time.perf_counter()
 
-                print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
                 print (f"Analysis for {in_reps}\n")
 
@@ -1859,7 +1859,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                             self.box_size[j] = self.trj[j].unitcell_lengths[0][0]
 
                     e_time = time.perf_counter()
-                    print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                    print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
                     print (f"Analysis for {in_reps}\n")
 
@@ -1897,7 +1897,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     self.box_size[key] = self.trj[key].unitcell_lengths[0][0]
 
                 e_time = time.perf_counter()
-                print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
                 print (f"Analysis for {batch_keys}\n")
 
@@ -2006,7 +2006,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     reset_dict(self.sa)
 
                     e_time = time.perf_counter()
-                    print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                    print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
                 if self.analysis_dict['pp_rmsd'] : 
 
@@ -2025,7 +2025,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     reset_dict(self.pp)
                     
                     e_time = time.perf_counter()
-                    print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                    print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
                 if self.analysis_dict['rg'] : 
                     s_time = time.perf_counter()
@@ -2036,7 +2036,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     reset_dict(self.rg)
 
                     e_time = time.perf_counter()
-                    print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                    print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
                 if self.analysis_dict['ss'] : 
 
@@ -2062,7 +2062,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     # reset_dict(self.helix_contant)
                     # reset_dict(self.sheet_contant)
                     e_time = time.perf_counter()
-                    print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                    print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
                 if self.analysis_dict['ba'] : 
 
@@ -2073,7 +2073,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     reset_dict(self.bend_angle)
 
                     e_time = time.perf_counter()
-                    print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                    print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
             if self.analysis_dict['p_cm'] : 
                 s_time = time.perf_counter()
@@ -2090,7 +2090,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     # reset_dict(self.p_contact_distance_map)
                 
                 e_time = time.perf_counter()
-                print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
         else : 
 
@@ -2111,7 +2111,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     del ps
                     reset_dict(self.sa)
                     e_time = time.perf_counter()
-                    print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                    print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
                 if self.analysis_dict['pp_rmsd'] : 
                     s_time = time.perf_counter()
@@ -2128,7 +2128,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     del ps
                     reset_dict(self.pp)
                     e_time = time.perf_counter()
-                    print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                    print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
                 if self.analysis_dict['rg'] : 
                     s_time = time.perf_counter()
@@ -2138,7 +2138,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     self.write_json_file(self.rg, self.out_file_dict['rg'], write=write)
                     self.rg[i] = calc_rg(self.trj[i])
                     e_time = time.perf_counter()
-                    print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                    print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
                 if self.analysis_dict['ss'] : 
                     s_time = time.perf_counter()    
@@ -2162,7 +2162,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     # reset_dict(self.helix_contant)
                     # reset_dict(self.sheet_contant)
                     e_time = time.perf_counter()
-                    print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                    print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
                 if self.analysis_dict['ba'] : 
 
@@ -2172,7 +2172,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     self.write_json_file(self.bend_angle, self.out_file_dict['ba'], write=write)
                     reset_dict(self.bend_angle)
                     e_time = time.perf_counter()
-                    print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                    print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
                 # print(f"Claculating Kd...\n")
             
@@ -2257,7 +2257,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                                      self.average_ligand_contacts_bf])
 
                 e_time = time.perf_counter()
-                print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
 
 
@@ -2285,7 +2285,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         self.write_json_file(self.charge_fraction_bf, self.out_file_dict['charge:bf'], write=write)
                         reset_dict([self.charge_re,self.charge_fraction, self.charge_re_bf, self.charge_fraction_bf ])
                         e_time = time.perf_counter()
-                        print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                        print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
                     if self.analysis_dict['aro'] : 
 
@@ -2331,7 +2331,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         reset_dict([self.hydro_interactions_re,self.hydro_interactions, self.hydro_interactions_re_bf, self.hydro_interactions_bf ,
                                     self.hydro_binary])
                         e_time = time.perf_counter()
-                        print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                        print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
                     if self.analysis_dict['hbond'] : 
 
@@ -2354,7 +2354,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         reset_dict([self.hbond_interactions_re,self.hbond_interactions, self.hbond_interactions_re_bf, self.hbond_interactions_bf ,
                                     self.hbond_binary])
                         e_time = time.perf_counter()
-                        print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                        print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
                     if self.analysis_dict['p_cm'] : 
 
@@ -2368,7 +2368,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         # self.write_json_file(self.p_contact_distance_map, self.out_file_dict['p_cd'], write=write)
                         reset_dict([self.p_contact_map,self.p_contact_distance_map])
                         e_time = time.perf_counter()
-                        print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                        print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
                     if self.analysis_dict['l_cm'] : 
 
@@ -2380,7 +2380,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         self.write_json_file(self.l_contact_map, self.out_file_dict['l_cm_rw'], write=write)
                         reset_dict(self.l_contact_map)
                         e_time = time.perf_counter()
-                        print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                        print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
                     pass
 
@@ -2401,7 +2401,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         self.write_json_file(self.charge_fraction_bf, self.out_file_dict['charge:bf'], write=write)
                         reset_dict([self.charge_fraction, self.charge_fraction_bf ])
                         e_time = time.perf_counter()
-                        print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                        print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
                     if self.analysis_dict['aro'] : 
 
@@ -2421,7 +2421,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         self.write_json_file(self.aro_interactions_bf, self.out_file_dict['aro:bf'], write=write)
                         reset_dict([self.aro_interactions, self.aro_interactions_bf, self.aro_binary_contacts,self.stackparams])
                         e_time = time.perf_counter()
-                        print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                        print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
                     if self.analysis_dict['hyphob'] :
 
@@ -2440,7 +2440,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         self.write_json_file(self.hydro_interactions_bf, self.out_file_dict['hyph:bf'], write=write)
                         reset_dict([self.hydro_interactions, self.hydro_interactions_bf ,self.hydro_binary])
                         e_time = time.perf_counter()
-                        print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                        print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
                     if self.analysis_dict['hbond'] : 
 
@@ -2459,7 +2459,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         self.write_json_file(self.hbond_interactions_bf, self.out_file_dict['hb:bf'], write=write)
                         reset_dict([self.hbond_interactions, self.hbond_interactions_bf ,self.hbond_binary])
                         e_time = time.perf_counter()
-                        print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                        print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
                     if self.analysis_dict['p_cm'] : 
 
@@ -2473,7 +2473,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         # self.write_json_file(self.p_contact_distance_map, self.out_file_dict['p_cd'], write=write)
                         reset_dict([self.p_contact_map,self.p_contact_distance_map])
                         e_time = time.perf_counter()
-                        print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                        print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
                     if self.analysis_dict['l_cm'] : 
 
@@ -2485,8 +2485,8 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         self.write_json_file(self.l_contact_map, self.out_file_dict['l_cm'], write=write)
                         reset_dict(self.l_contact_map)
                         e_time = time.perf_counter()
-                        print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
-                        
+                        print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
+
             # print(f"Claculating bound fraction parameters...\n")
 
             # for i in in_reps:
