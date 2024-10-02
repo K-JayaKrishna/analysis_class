@@ -1778,6 +1778,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
     def __init__(self, rep_trajectory: str, pdb: str, prot_start_res_num: int, prot_end_res_num: int, out_dir: str, analysis_list: list = [], pbc_tpr: str = None, helix_pdb: str = None, pp_pdb: str = None, ligand_rings: list = [], ligand_residue_index: int = None, nreps: int = 1, stride: int = 1, offset: int = 0, ligand_positive_charge_atoms: list = [], ligand_negative_charge_atoms: list = [], lig_hbond_donors: list = [], colvar_file: str = None, pbc: dict = { 'pbc': True,'traj_in_tag': 'prod_','traj_out_tag': 'pbc_','traj_type': 'xtc' }, trj_break: int = 8, rep_demux_switch: str = "off", demux_trajectory: str = None, apo: bool = False, **kwargs):
         super().__init__(rep_trajectory, pdb, prot_start_res_num, prot_end_res_num, out_dir, analysis_list, pbc_tpr, helix_pdb, pp_pdb, ligand_rings, ligand_residue_index, nreps, stride, offset, ligand_positive_charge_atoms, ligand_negative_charge_atoms, lig_hbond_donors, colvar_file, pbc, trj_break, rep_demux_switch, demux_trajectory, apo, **kwargs)
         
+        s_time = time.perf_counter()
         # if not self.rest : self.sequence = np.array([f'{residue}' for residue in self.trj[0].topology.residues])
         # elif self.rest : self.sequence = np.array([f'{residue}' for residue in self.trj["rep:0"].topology.residues])
         self.sequence = np.array([f'{residue}' for residue in self.temp.topology.residues])
@@ -1799,21 +1800,30 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
 
             if self.nreps < self.trj_brk : 
 
+                s_time = time.perf_counter()
+
                 in_reps = [i for i in range(self.nreps)]
                 self.trj={}
+
 
                 for i in in_reps :
 
                     print(f"Loading trajectory {self.traj_tag_in}...\n")
+
 
                     self.trj[i] = load_traj(args_dict={'trajectory':self.trj_dict[i],
                                             'pdb':self.pdb_p,
                                             'stride':self.stride, 
                                             'p_sel':self.p_sel})                    
                     
+
                     self.n_frames[i] = self.trj[i].n_frames
                     self.simulation_time[i] = self.trj[i].timestep * self.n_frames[i]/(10**6)
                     self.box_size[i] = self.trj[i].unitcell_lengths[0][0]
+
+                e_time = time.perf_counter()
+
+                print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
 
                 print (f"Analysis for {in_reps}\n")
 
@@ -1827,6 +1837,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
 
 
                 for i in range(0,self.nreps,self.trj_brk):
+                    s_time = time.perf_counter()
                     in_reps=[]
                     self.trj={}
 
@@ -1847,6 +1858,9 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                             self.simulation_time[j] = self.trj[j].timestep * self.n_frames[j]/(10**6)
                             self.box_size[j] = self.trj[j].unitcell_lengths[0][0]
 
+                    e_time = time.perf_counter()
+                    print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+
                     print (f"Analysis for {in_reps}\n")
 
                     self.analysis(in_reps,write=write, rest=self.rest)
@@ -1857,9 +1871,12 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
 
         elif self.rest:
             
+
             keys = list(self.trj_dict.keys())
 
             for i in range(0,len(keys),self.trj_brk):
+                s_time = time.perf_counter()
+
                 batch_keys = keys[i:i + self.trj_brk]
                 in_reps=[]
                 self.trj={}
@@ -1879,6 +1896,9 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     self.simulation_time[key] = self.trj[key].timestep * self.n_frames[key]/(10**6)
                     self.box_size[key] = self.trj[key].unitcell_lengths[0][0]
 
+                e_time = time.perf_counter()
+                print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+
                 print (f"Analysis for {batch_keys}\n")
 
                 self.analysis(batch_keys,write=write, rest=self.rest)
@@ -1887,8 +1907,8 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
 
                 write=False
 
-
-        print(f"All Done!...\n")
+        e_time = time.perf_counter()
+        print(f"All Done in {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
 
         random_quote()
 
@@ -1970,6 +1990,8 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
 
                 if self.analysis_dict['salpha_rmsd'] : 
 
+                    s_time = time.perf_counter()
+
                     print(f"Claculating Alpha-Helix RMSD...\n")
                     ps = restrict_atoms({'trajectory':self.trj[i],
                                          'selection':f"resid {self.prot_start_res_num} to {self.prot_end_res_num} and name CA"})
@@ -1983,8 +2005,12 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     del ps
                     reset_dict(self.sa)
 
+                    e_time = time.perf_counter()
+                    print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+
                 if self.analysis_dict['pp_rmsd'] : 
 
+                    s_time = time.perf_counter()
                     print(f"Claculating Poly-prolein RMSD...\n")
                     ps = restrict_atoms({'trajectory':self.trj[i],
                                          'selection':f"resid {self.prot_start_res_num} to {self.prot_end_res_num} and name CA"})
@@ -1997,17 +2023,24 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     self.write_json_file(self.pp_rmsd, self.out_file_dict['pp_rmsd'], write=write)
                     del ps
                     reset_dict(self.pp)
+                    
+                    e_time = time.perf_counter()
+                    print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
 
                 if self.analysis_dict['rg'] : 
-
+                    s_time = time.perf_counter()
                     print(f"Claculating Rg...\n")
                     self.rg[i] = calc_rg(self.trj[i])
                     
                     self.write_json_file(self.rg, self.out_file_dict['rg'], write=write)
                     reset_dict(self.rg)
 
+                    e_time = time.perf_counter()
+                    print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+
                 if self.analysis_dict['ss'] : 
-                        
+
+                    s_time = time.perf_counter()    
                     print(f"Claculating SS propenseties...\n")
                     self.alphabeta_alpharight[i],self.alphabeta_betasheet[i],self.alphabeta_ppII[i] =  calc_phipsi(self.trj[i])
                     ps = restrict_atoms({'trajectory':self.trj[i],
@@ -2028,16 +2061,22 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     # reset_dict(self.alphabeta_ppII)
                     # reset_dict(self.helix_contant)
                     # reset_dict(self.sheet_contant)
+                    e_time = time.perf_counter()
+                    print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
 
                 if self.analysis_dict['ba'] : 
 
+                    s_time = time.perf_counter()
                     print(f"Claculating average bend angle...\n")
                     self.bend_angle[i] = ave_angle(self.trj[i], [0,10,19])
                     self.write_json_file(self.bend_angle, self.out_file_dict['ba'], write=write)
                     reset_dict(self.bend_angle)
 
-            if self.analysis_dict['p_cm'] : 
+                    e_time = time.perf_counter()
+                    print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
 
+            if self.analysis_dict['p_cm'] : 
+                s_time = time.perf_counter()
                 with Pool() as p:
                     rep_range=[i for i in in_reps] 
 
@@ -2049,13 +2088,96 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     self.write_json_file(self.p_contact_map, self.out_file_dict['p_cm'], write=write)
                     reset_dict([self.p_contact_map,self.p_contact_distance_map])
                     # reset_dict(self.p_contact_distance_map)
-
+                
+                e_time = time.perf_counter()
+                print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
 
         else : 
 
+            for i in in_reps:
+
+                if self.analysis_dict['salpha_rmsd'] : 
+                    s_time = time.perf_counter()
+                    print(f"Claculating Alpha-Helix RMSD...\n")
+                    ps = restrict_atoms({'trajectory':self.trj[i],
+                                         'selection':f"resid {self.prot_start_res_num} to {self.prot_end_res_num} and name CA"})
+                    # ps = self.trj[i]
+                    # ps.restrict_atoms(ps.topology.select(f"resid {self.prot_start_res_num} to {self.prot_end_res_num} and name CA"))
+                    # ps=self.p_trj[i].restrict_atoms(self.p_trj[i].topology.select(f"resid {self.prot_start_res_num} to {self.prot_end_res_num} and name CA"))
+                    # ps.center_coordinates()
+                    self.sa[i] = calc_SA(ps,self.helix, self.prot_start_res_num, self.prot_end_res_num-6)
+                    
+                    self.write_json_file(self.sa, self.out_file_dict['sa'], write=write)
+                    del ps
+                    reset_dict(self.sa)
+                    e_time = time.perf_counter()
+                    print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+
+                if self.analysis_dict['pp_rmsd'] : 
+                    s_time = time.perf_counter()
+                    print(f"Claculating Poly-prolein RMSD...\n")
+                    ps = restrict_atoms({'trajectory':self.trj[i],
+                                         'selection':f"resid {self.prot_start_res_num} to {self.prot_end_res_num} and name CA"})
+                    # ps = self.trj[i]
+                    # ps.restrict_atoms(ps.topology.select(f"resid {self.prot_start_res_num} to {self.prot_end_res_num} and name CA"))
+                    # ps=self.p_trj[i].restrict_atoms(self.p_trj[i].topology.select(f"resid {self.prot_start_res_num} to {self.prot_end_res_num} and name CA"))
+                    # ps.center_coordinates()
+                    self.pp_rmsd[i] = calc_SA(ps, self.pp, self.prot_start_res_num, self.prot_end_res_num-6)
+                    
+                    self.write_json_file(self.pp_rmsd, self.out_file_dict['pp_rmsd'], write=write)
+                    del ps
+                    reset_dict(self.pp)
+                    e_time = time.perf_counter()
+                    print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+
+                if self.analysis_dict['rg'] : 
+                    s_time = time.perf_counter()
+                    print(f"Claculating Rg...\n")
+                    self.rg[i] = calc_rg(self.trj[i])
+                    
+                    self.write_json_file(self.rg, self.out_file_dict['rg'], write=write)
+                    self.rg[i] = calc_rg(self.trj[i])
+                    e_time = time.perf_counter()
+                    print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+
+                if self.analysis_dict['ss'] : 
+                    s_time = time.perf_counter()    
+                    print(f"Claculating SS propenseties...\n")
+                    self.alphabeta_alpharight[i],self.alphabeta_betasheet[i],self.alphabeta_ppII[i] =  calc_phipsi(self.trj[i])
+                    ps = restrict_atoms({'trajectory':self.trj[i],
+                                         'selection':f"resid {self.prot_start_res_num} to {self.prot_end_res_num}"})
+                    # ps.restrict_atoms(ps.topology.select(f"resid {self.prot_start_res_num} to {self.prot_end_res_num}"))
+                    self.helix_contant[i], self.sheet_contant[i] = ss(ps)
+                        
+                    self.write_json_file(self.alphabeta_alpharight, self.out_file_dict['aright'], write=write)
+                    self.write_json_file(self.alphabeta_betasheet, self.out_file_dict['sheet'], write=write)
+                    self.write_json_file(self.alphabeta_ppII, self.out_file_dict['pp'], write=write)
+
+                    self.write_json_file(self.helix_contant, self.out_file_dict['ss_h'], write=write)
+                    self.write_json_file(self.sheet_contant, self.out_file_dict['ss_s'], write=write)
+                    reset_dict([self.alphabeta_alpharight,self.alphabeta_betasheet,self.alphabeta_ppII,self.helix_contant, self.sheet_contant])
+                    del ps
+                    # reset_dict(self.alphabeta_betasheet)
+                    # reset_dict(self.alphabeta_ppII)
+                    # reset_dict(self.helix_contant)
+                    # reset_dict(self.sheet_contant)
+                    e_time = time.perf_counter()
+                    print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+
+                if self.analysis_dict['ba'] : 
+
+                    s_time = time.perf_counter()
+                    print(f"Claculating average bend angle...\n")
+                    self.bend_angle[i] = ave_angle(self.trj[i], [0,10,19])
+                    self.write_json_file(self.bend_angle, self.out_file_dict['ba'], write=write)
+                    reset_dict(self.bend_angle)
+                    e_time = time.perf_counter()
+                    print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+
+                # print(f"Claculating Kd...\n")
             
             if self.analysis_dict['kd'] :
-
+                s_time = time.perf_counter()
                 with Pool() as p:
                     rep_range=[i for i in in_reps]
 
@@ -2118,7 +2240,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         self.write_json_file(self.bound_fraction, self.out_file_dict['bf'], write=write)
                     # self.write_json_file(self.contact_matrix, self.out_file_dict['cm'], write=write)
                         # reset_dict([self.average_ligand_contacts,self.contact_matrix,self.kd_bf_time ])
-
+                
                 for i in in_reps : 
 
                     if self.w  :
@@ -2134,78 +2256,10 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         reset_dict([self.average_ligand_contacts,self.contact_matrix,self.kd_bf_time,
                                      self.average_ligand_contacts_bf])
 
+                e_time = time.perf_counter()
+                print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
 
 
-            for i in in_reps:
-
-                if self.analysis_dict['salpha_rmsd'] : 
-
-                    print(f"Claculating Alpha-Helix RMSD...\n")
-                    ps = restrict_atoms({'trajectory':self.trj[i],
-                                         'selection':f"resid {self.prot_start_res_num} to {self.prot_end_res_num} and name CA"})
-                    # ps = self.trj[i]
-                    # ps.restrict_atoms(ps.topology.select(f"resid {self.prot_start_res_num} to {self.prot_end_res_num} and name CA"))
-                    # ps=self.p_trj[i].restrict_atoms(self.p_trj[i].topology.select(f"resid {self.prot_start_res_num} to {self.prot_end_res_num} and name CA"))
-                    # ps.center_coordinates()
-                    self.sa[i] = calc_SA(ps,self.helix, self.prot_start_res_num, self.prot_end_res_num-6)
-                    
-                    self.write_json_file(self.sa, self.out_file_dict['sa'], write=write)
-                    del ps
-                    reset_dict(self.sa)
-
-                if self.analysis_dict['pp_rmsd'] : 
-
-                    print(f"Claculating Poly-prolein RMSD...\n")
-                    ps = restrict_atoms({'trajectory':self.trj[i],
-                                         'selection':f"resid {self.prot_start_res_num} to {self.prot_end_res_num} and name CA"})
-                    # ps = self.trj[i]
-                    # ps.restrict_atoms(ps.topology.select(f"resid {self.prot_start_res_num} to {self.prot_end_res_num} and name CA"))
-                    # ps=self.p_trj[i].restrict_atoms(self.p_trj[i].topology.select(f"resid {self.prot_start_res_num} to {self.prot_end_res_num} and name CA"))
-                    # ps.center_coordinates()
-                    self.pp_rmsd[i] = calc_SA(ps, self.pp, self.prot_start_res_num, self.prot_end_res_num-6)
-                    
-                    self.write_json_file(self.pp_rmsd, self.out_file_dict['pp_rmsd'], write=write)
-                    del ps
-                    reset_dict(self.pp)
-
-                if self.analysis_dict['rg'] : 
-
-                    print(f"Claculating Rg...\n")
-                    self.rg[i] = calc_rg(self.trj[i])
-                    
-                    self.write_json_file(self.rg, self.out_file_dict['rg'], write=write)
-                    self.rg[i] = calc_rg(self.trj[i])
-
-                if self.analysis_dict['ss'] : 
-                        
-                    print(f"Claculating SS propenseties...\n")
-                    self.alphabeta_alpharight[i],self.alphabeta_betasheet[i],self.alphabeta_ppII[i] =  calc_phipsi(self.trj[i])
-                    ps = restrict_atoms({'trajectory':self.trj[i],
-                                         'selection':f"resid {self.prot_start_res_num} to {self.prot_end_res_num}"})
-                    # ps.restrict_atoms(ps.topology.select(f"resid {self.prot_start_res_num} to {self.prot_end_res_num}"))
-                    self.helix_contant[i], self.sheet_contant[i] = ss(ps)
-                        
-                    self.write_json_file(self.alphabeta_alpharight, self.out_file_dict['aright'], write=write)
-                    self.write_json_file(self.alphabeta_betasheet, self.out_file_dict['sheet'], write=write)
-                    self.write_json_file(self.alphabeta_ppII, self.out_file_dict['pp'], write=write)
-
-                    self.write_json_file(self.helix_contant, self.out_file_dict['ss_h'], write=write)
-                    self.write_json_file(self.sheet_contant, self.out_file_dict['ss_s'], write=write)
-                    reset_dict([self.alphabeta_alpharight,self.alphabeta_betasheet,self.alphabeta_ppII,self.helix_contant, self.sheet_contant])
-                    del ps
-                    # reset_dict(self.alphabeta_betasheet)
-                    # reset_dict(self.alphabeta_ppII)
-                    # reset_dict(self.helix_contant)
-                    # reset_dict(self.sheet_contant)
-
-                if self.analysis_dict['ba'] : 
-
-                    print(f"Claculating average bend angle...\n")
-                    self.bend_angle[i] = ave_angle(self.trj[i], [0,10,19])
-                    self.write_json_file(self.bend_angle, self.out_file_dict['ba'], write=write)
-                    reset_dict(self.bend_angle)
-
-                # print(f"Claculating Kd...\n")
 
 
             with Pool() as p:
@@ -2213,8 +2267,9 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                 
                 if self.w :
 
-                    if self.analysis_dict['charge'] : 
-                        
+                    if self.analysis_dict['charge'] :
+
+                        s_time = time.perf_counter()
                         print(f"Claculating charge...\n")
                         self.charge_re, self.charge_fraction = zip(*p.map(self.charge_out,rep_range))
                         self.charge_re = dict_conv(self.charge_re, in_reps, rest=rest)
@@ -2229,9 +2284,12 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         self.write_json_file(self.charge_re_bf, self.out_file_dict['charge_rw:bf'], write=write)
                         self.write_json_file(self.charge_fraction_bf, self.out_file_dict['charge:bf'], write=write)
                         reset_dict([self.charge_re,self.charge_fraction, self.charge_re_bf, self.charge_fraction_bf ])
+                        e_time = time.perf_counter()
+                        print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
 
                     if self.analysis_dict['aro'] : 
 
+                        s_time  = time.perf_counter()
                         print(f"Claculating aro...\n")
                         self.aro_interactions_re, self.aro_interactions, self.aro_binary_contacts, self.stackparams = zip(*p.map(self.aro_out,rep_range))
                         self.aro_interactions_re = dict_conv(self.aro_interactions_re, in_reps, rest=rest)
@@ -2250,9 +2308,11 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         self.write_json_file(self.aro_interactions_bf, self.out_file_dict['aro:bf'], write=write)
                         reset_dict([self.aro_interactions_re,self.aro_interactions, self.aro_interactions_re_bf, self.aro_interactions_bf ,
                                     self.aro_binary_contacts,self.stackparams])
+                        e_time = time.perf_counter()
 
                     if self.analysis_dict['hyphob'] : 
                         
+                        s_time = time.perf_counter()
                         print(f"Claculating hphob...\n")
                         self.hydro_interactions_re, self.hydro_interactions, self.hydro_binary = zip(*p.map(self.hydro_out, rep_range))
                         self.hydro_interactions_re = dict_conv(self.hydro_interactions_re, in_reps, rest=rest)
@@ -2270,9 +2330,12 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         self.write_json_file(self.hydro_interactions_bf, self.out_file_dict['hyph:bf'], write=write)
                         reset_dict([self.hydro_interactions_re,self.hydro_interactions, self.hydro_interactions_re_bf, self.hydro_interactions_bf ,
                                     self.hydro_binary])
-                        
+                        e_time = time.perf_counter()
+                        print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+
                     if self.analysis_dict['hbond'] : 
 
+                        s_time = time.perf_counter()
                         print(f"Claculating hbond...\n")
                         self.hbond_interactions_re, self.hbond_interactions, self.hbond_binary =  zip(*p.map(self.hbond_out, rep_range))
                         self.hbond_interactions_re = dict_conv(self.hbond_interactions_re, in_reps, rest=rest)
@@ -2290,9 +2353,12 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         self.write_json_file(self.hbond_interactions_bf, self.out_file_dict['hb:bf'], write=write)
                         reset_dict([self.hbond_interactions_re,self.hbond_interactions, self.hbond_interactions_re_bf, self.hbond_interactions_bf ,
                                     self.hbond_binary])
-                        
+                        e_time = time.perf_counter()
+                        print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+
                     if self.analysis_dict['p_cm'] : 
 
+                        s_time = time.perf_counter()
                         print(f"Claculating protein contact matrix...\n")
                         self.p_contact_map, self.p_contact_distance_map = zip(*p.map(self.p_cm, rep_range))
                         self.p_contact_map = dict_conv(self.p_contact_map, in_reps, rest=rest)
@@ -2301,22 +2367,28 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         self.write_json_file(self.p_contact_map, self.out_file_dict['p_cm_rw'], write=write)
                         # self.write_json_file(self.p_contact_distance_map, self.out_file_dict['p_cd'], write=write)
                         reset_dict([self.p_contact_map,self.p_contact_distance_map])
+                        e_time = time.perf_counter()
+                        print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
 
                     if self.analysis_dict['l_cm'] : 
 
+                        s_time = time.perf_counter()
                         print(f"Claculating ligand-protein dual contact matrix...\n")
                         self.l_contact_map = p.map(self.l_cm, rep_range)
                         self.l_contact_map = dict_conv(self.l_contact_map, in_reps, rest=rest)
 
                         self.write_json_file(self.l_contact_map, self.out_file_dict['l_cm_rw'], write=write)
                         reset_dict(self.l_contact_map)
+                        e_time = time.perf_counter()
+                        print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
 
                     pass
 
                 else:
                     
-                    if self.analysis_dict['charge'] : 
+                    if self.analysis_dict['charge'] :
 
+                        s_time = time.perf_counter()
                         print(f"Claculating charge...\n")
                         self.charge_fraction = p.map(self.charge_out,rep_range)
                         self.charge_fraction = dict_conv(self.charge_fraction, in_reps, rest=rest)
@@ -2328,9 +2400,12 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         self.write_json_file(self.charge_fraction, self.out_file_dict['charge:all'], write=write)
                         self.write_json_file(self.charge_fraction_bf, self.out_file_dict['charge:bf'], write=write)
                         reset_dict([self.charge_fraction, self.charge_fraction_bf ])
+                        e_time = time.perf_counter()
+                        print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
 
                     if self.analysis_dict['aro'] : 
 
+                        s_time = time.perf_counter()
                         print(f"Claculating aro...\n")
                         self.aro_interactions, self.aro_binary_contacts, self.stackparams = zip(*p.map(self.aro_out,rep_range))
                         self.aro_interactions = dict_conv(self.aro_interactions, in_reps, rest=rest)
@@ -2345,9 +2420,12 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         # self.write_json_file(self.aro_binary_contacts, self.out_file_dict['aro:binary'], write=write)
                         self.write_json_file(self.aro_interactions_bf, self.out_file_dict['aro:bf'], write=write)
                         reset_dict([self.aro_interactions, self.aro_interactions_bf, self.aro_binary_contacts,self.stackparams])
-                        
-                    if self.analysis_dict['hyphob'] : 
+                        e_time = time.perf_counter()
+                        print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
 
+                    if self.analysis_dict['hyphob'] :
+
+                        s_time = time.perf_counter()
                         print(f"Claculating hphob...\n")
                         self.hydro_interactions, self.hydro_binary = zip(*p.map(self.hydro_out, rep_range))
                         self.hydro_interactions = dict_conv(self.hydro_interactions, in_reps, rest=rest)
@@ -2361,9 +2439,12 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         # self.write_json_file(self.hydro_binary, self.out_file_dict['hyph:binary'], write=write)
                         self.write_json_file(self.hydro_interactions_bf, self.out_file_dict['hyph:bf'], write=write)
                         reset_dict([self.hydro_interactions, self.hydro_interactions_bf ,self.hydro_binary])
-                        
+                        e_time = time.perf_counter()
+                        print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+
                     if self.analysis_dict['hbond'] : 
 
+                        s_time = time.perf_counter()
                         print(f"Claculating hbond...\n")
                         self.hbond_interactions, self.hbond_binary =  zip(*p.map(self.hbond_out, rep_range))
                         self.hbond_interactions = dict_conv(self.hbond_interactions, in_reps, rest=rest)
@@ -2377,9 +2458,12 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         # self.write_json_file(self.hbond_binary, self.out_file_dict['hb:binary'], write=write)
                         self.write_json_file(self.hbond_interactions_bf, self.out_file_dict['hb:bf'], write=write)
                         reset_dict([self.hbond_interactions, self.hbond_interactions_bf ,self.hbond_binary])
+                        e_time = time.perf_counter()
+                        print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
 
                     if self.analysis_dict['p_cm'] : 
 
+                        s_time = time.perf_counter()
                         print(f"Claculating protein contact matrix...\n")
                         self.p_contact_map, self.p_contact_distance_map = zip(*p.map(self.p_cm, rep_range))
                         self.p_contact_map = dict_conv(self.p_contact_map, in_reps, rest=rest)
@@ -2388,16 +2472,21 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         self.write_json_file(self.p_contact_map, self.out_file_dict['p_cm'], write=write)
                         # self.write_json_file(self.p_contact_distance_map, self.out_file_dict['p_cd'], write=write)
                         reset_dict([self.p_contact_map,self.p_contact_distance_map])
+                        e_time = time.perf_counter()
+                        print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
 
                     if self.analysis_dict['l_cm'] : 
 
+                        s_time = time.perf_counter()
                         print(f"Claculating ligand-protein dual contact matrix...\n")
                         self.l_contact_map = p.map(self.l_cm, rep_range)
                         self.l_contact_map = dict_conv(self.l_contact_map, in_reps, rest=rest)
 
                         self.write_json_file(self.l_contact_map, self.out_file_dict['l_cm'], write=write)
                         reset_dict(self.l_contact_map)
-
+                        e_time = time.perf_counter()
+                        print(f"Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n")
+                        
             # print(f"Claculating bound fraction parameters...\n")
 
             # for i in in_reps:
