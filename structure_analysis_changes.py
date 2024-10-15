@@ -508,8 +508,10 @@ class initial():
         self.hbond_interactions_re_bf={}
 
         self.p_contact_map = {}
-        self.p_contact_distance_map = {}
+        self.p_contact_map_re = {}
+        # self.p_contact_distance_map = {}
         self.l_contact_map = {}
+        self.l_contact_map_re = {}
 
         # self.num_residues = self.pdb.topology.n_residues
         self.temp = self.pdb.atom_slice(self.pdb.topology.select(self.p_sel))
@@ -1589,11 +1591,16 @@ def contact_map_protein_rw(trj, weights:list=[], cutoff:float=1.2, apo:bool=Fals
     # Identify contacts based on cutoff
     contact_array = np.where(dist_array < cutoff, 1, 0)
 
-    # Initialize contact and distance matrices
-    distance_matrix = np.zeros((p_residues, p_residues))
-    contact_matrix = np.zeros((p_residues, p_residues))
 
     if len(weights) > 0:
+
+        # Initialize contact and distance matrices
+        distance_matrix = np.zeros((p_residues, p_residues))
+        contact_matrix = np.zeros((p_residues, p_residues))
+
+        distance_matrix_re = np.zeros((p_residues, p_residues))
+        contact_matrix_re = np.zeros((p_residues, p_residues))
+        
         # Ensure weights are normalized
         weights = np.array(weights) / np.sum(weights)
 
@@ -1601,19 +1608,36 @@ def contact_map_protein_rw(trj, weights:list=[], cutoff:float=1.2, apo:bool=Fals
         reweighted_distances = np.dot(weights, dist_array)  # Reweight distances across frames
         reweighted_contacts = np.dot(weights, contact_array)  # Reweight contacts across frames
 
-        # Fill the upper triangle of the matrices with the reweighted values
-        distance_matrix[indices[:, 0], indices[:, 1]] = reweighted_distances
-        contact_matrix[indices[:, 0], indices[:, 1]] = reweighted_contacts
-    else:
         # Compute mean values without reweighting
         distance_matrix[indices[:, 0], indices[:, 1]] = dist_array.mean(axis=0)
         contact_matrix[indices[:, 0], indices[:, 1]] = contact_array.mean(axis=0)
 
-    # Make matrices symmetric
-    distance_matrix += distance_matrix.T
-    contact_matrix += contact_matrix.T
+        # Fill the upper triangle of the matrices with the reweighted values
+        distance_matrix_re[indices[:, 0], indices[:, 1]] = reweighted_distances
+        contact_matrix_re[indices[:, 0], indices[:, 1]] = reweighted_contacts
 
-    return np.array(contact_matrix).astype(float)  # , np.array(distance_matrix).astype(float)
+        # Make matrices symmetric
+        distance_matrix += distance_matrix.T
+        contact_matrix += contact_matrix.T
+        distance_matrix_re += distance_matrix_re.T
+        contact_matrix_re += contact_matrix_re.T
+
+        return np.array(contact_matrix).astype(float) , np.array(contact_matrix_re).astype(float)
+
+    else:
+        # Initialize contact and distance matrices
+        distance_matrix = np.zeros((p_residues, p_residues))
+        contact_matrix = np.zeros((p_residues, p_residues))
+
+        # Compute mean values without reweighting
+        distance_matrix[indices[:, 0], indices[:, 1]] = dist_array.mean(axis=0)
+        contact_matrix[indices[:, 0], indices[:, 1]] = contact_array.mean(axis=0)
+
+        # Make matrices symmetric
+        distance_matrix += distance_matrix.T
+        contact_matrix += contact_matrix.T
+
+        return np.array(contact_matrix).astype(float)  # , np.array(distance_matrix).astype(float)
 
 
 
@@ -1642,34 +1666,6 @@ def contact_map_ligand_rw(trj, ps:int, pe:int, ligand_res_index:int, weights:lis
         contact_maps.append(contact_map)
         
     return np.asarray(contact_maps).astype(float)
-
-# def contact_map_ligand_rw_1(trj, ps:int, pe:int, ligand_res_index:int, weights:list=[], cutoff=0.6):
-#     # Create pairs for compute_contacts
-#     pairs = [[i, ligand_res_index] for i in range(ps, pe+1)]
-#     pairs = np.array(pairs)
-
-#     # Compute distances
-#     dists = md.compute_contacts(trj, pairs, scheme='closest-heavy')[0]
-
-#     # Convert to float
-#     dists = dists.astype(float)
-
-#     # Compute contact maps
-#     contacts = np.where(dists < cutoff, 1, 0)
-
-#     # Compute pairwise contacts
-#     pairwise_contacts = np.dot(contacts, contacts.T)
-
-#     # Compute final contact map
-#     final_contacts = np.where(pairwise_contacts == 2, 1, 0)
-
-#     # Apply weights if provided
-#     if len(weights) > 0:
-#         final_contacts = np.dot(final_contacts, weights)
-#     else:
-#         final_contacts = np.average(final_contacts, axis=1)
-
-#     return final_contacts.astype(float)
 
 def contact_map_ligand_2(trj, ps:int, pe:int, ligand_res_index:int, weights:list=[], cutoff=0.6):
     # Create pairs for compute_contacts
@@ -1729,13 +1725,18 @@ def contact_map_ligand_rw_2(trj, ps:int, pe:int, ligand_res_index:int, weights:l
         # Reweight contacts by applying weights to each frame
         reweighted_contacts = contacts * weights[:, np.newaxis]
         
+        dual = (contacts.T @ contacts) / len(contacts)
+
         # Compute reweighted dual contact map
-        dual = (reweighted_contacts.T @ contacts) / np.sum(weights)
+        dual_re = (reweighted_contacts.T @ contacts) / np.sum(weights)
+
+        return np.array(dual).astype(float), np.array(dual_re).astype(float)
+    
     else:
         # If no weights provided, compute dual contact map without reweighting
         dual = (contacts.T @ contacts) / len(contacts)
 
-    return dual
+        return dual
 
 
 
@@ -2081,9 +2082,9 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     rep_range=[i for i in in_reps] 
 
                     print(f"Claculating contact matrix...\n")
-                    self.p_contact_map, self.p_contact_distance_map = zip(*p.map(self.p_cm, rep_range))
+                    self.p_contact_map = p.map(self.p_cm, rep_range)
                     self.p_contact_map = dict_conv(self.p_contact_map, in_reps, rest=rest)
-                    self.p_contact_distance_map = dict_conv(self.p_contact_distance_map, in_reps, rest=rest)
+                    # self.p_contact_distance_map = dict_conv(self.p_contact_distance_map, in_reps, rest=rest)
 
                     self.write_json_file(self.p_contact_map, self.out_file_dict['p_cm'], write=write)
                     reset_dict([self.p_contact_map,self.p_contact_distance_map])
@@ -2359,14 +2360,16 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     if self.analysis_dict['p_cm'] : 
 
                         s_time = time.perf_counter()
+                        
                         print(f"Claculating protein contact matrix...\n")
-                        self.p_contact_map, self.p_contact_distance_map = zip(*p.map(self.p_cm, rep_range))
+                        self.p_contact_map, self.p_contact_map_re = zip(*p.map(self.p_cm, rep_range))
                         self.p_contact_map = dict_conv(self.p_contact_map, in_reps, rest=rest)
-                        self.p_contact_distance_map = dict_conv(self.p_contact_distance_map, in_reps, rest=rest)
+                        self.p_contact_map_re = dict_conv(self.p_contact_map_re, in_reps, rest=rest)
 
-                        self.write_json_file(self.p_contact_map, self.out_file_dict['p_cm_rw'], write=write)
-                        # self.write_json_file(self.p_contact_distance_map, self.out_file_dict['p_cd'], write=write)
-                        reset_dict([self.p_contact_map,self.p_contact_distance_map])
+                        self.write_json_file(self.p_contact_map_re, self.out_file_dict['p_cm_rw'], write=write)
+                        self.write_json_file(self.p_contact_map, self.out_file_dict['p_cm'], write=write)
+
+                        reset_dict([self.p_contact_map,self.p_contact_map_re])
                         e_time = time.perf_counter()
                         print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
@@ -2374,11 +2377,14 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
 
                         s_time = time.perf_counter()
                         print(f"Claculating ligand-protein dual contact matrix...\n")
-                        self.l_contact_map = p.map(self.l_cm, rep_range)
+                        self.l_contact_map, self.l_contact_map_re = zip(*p.map(self.l_cm, rep_range))
                         self.l_contact_map = dict_conv(self.l_contact_map, in_reps, rest=rest)
+                        self.l_contact_map_re = dict_conv(self.l_contact_map_re, in_reps, rest=rest)
 
-                        self.write_json_file(self.l_contact_map, self.out_file_dict['l_cm_rw'], write=write)
-                        reset_dict(self.l_contact_map)
+                        self.write_json_file(self.l_contact_map_re, self.out_file_dict['l_cm_rw'], write=write)
+                        self.write_json_file(self.l_contact_map, self.out_file_dict['l_cm'], write=write)
+
+                        reset_dict([self.l_contact_map,self.l_contact_map_re])
                         e_time = time.perf_counter()
                         print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
@@ -2465,13 +2471,15 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
 
                         s_time = time.perf_counter()
                         print(f"Claculating protein contact matrix...\n")
-                        self.p_contact_map, self.p_contact_distance_map = zip(*p.map(self.p_cm, rep_range))
+                        self.p_contact_map = p.map(self.p_cm, rep_range)
                         self.p_contact_map = dict_conv(self.p_contact_map, in_reps, rest=rest)
-                        self.p_contact_distance_map = dict_conv(self.p_contact_distance_map, in_reps, rest=rest)
+                        # self.p_contact_distance_map = dict_conv(self.p_contact_distance_map, in_reps, rest=rest)
 
                         self.write_json_file(self.p_contact_map, self.out_file_dict['p_cm'], write=write)
                         # self.write_json_file(self.p_contact_distance_map, self.out_file_dict['p_cd'], write=write)
-                        reset_dict([self.p_contact_map,self.p_contact_distance_map])
+                        # reset_dict([self.p_contact_map,self.p_contact_distance_map])
+                        reset_dict(self.p_contact_map)
+
                         e_time = time.perf_counter()
                         print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
@@ -2486,45 +2494,4 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         reset_dict(self.l_contact_map)
                         e_time = time.perf_counter()
                         print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
-
-            # print(f"Claculating bound fraction parameters...\n")
-
-            # for i in in_reps:
-
-            #     if self.w :
-                    
-            #         self.charge_re_bf[i], self.charge_fraction_bf[i] = bf(self.charge_re[i] , self.bound_fraction[i][0]), bf(self.charge_fraction[i] , self.bound_fraction[i][0])
-                    
-            #         self.write_json_file(self.charge_re_bf, self.out_file_dict['charge_rw:bf'], write=write)
-            #         self.write_json_file(self.charge_fraction_bf, self.out_file_dict['charge:bf'], write=write)
-
-            #         self.aro_interactions_re_bf[i], self.aro_interactions_bf[i] = bf(self.aro_interactions_re[i] , self.bound_fraction[i][0]), bf(self.aro_interactions[i] , self.bound_fraction[i][0])
-                    
-            #         self.write_json_file(self.aro_interactions_re_bf, self.out_file_dict['aro_rw:bf'], write=write)
-            #         self.write_json_file(self.aro_interactions_bf, self.out_file_dict['aro:bf'], write=write)
-
-            #         self.hydro_interactions_re_bf[i], self.hydro_interactions_bf[i] = bf(self.hydro_interactions_re[i] , self.bound_fraction[i][0]), bf(self.hydro_interactions[i] , self.bound_fraction[i][0])
-                    
-            #         self.write_json_file(self.hydro_interactions_re_bf, self.out_file_dict['hyph_rw:bf'], write=write)
-            #         self.write_json_file(self.hydro_interactions_bf, self.out_file_dict['hyph:bf'], write=write)
-
-            #         self.hbond_interactions_re_bf[i], self.hbond_interactions_bf[i] = bf(self.hbond_interactions_re[i] , self.bound_fraction[i][0]), bf(self.hbond_interactions[i] , self.bound_fraction[i][0])
-                    
-            #         self.write_json_file(self.hbond_interactions_re_bf, self.out_file_dict['hb_rw:bf'], write=write)
-            #         self.write_json_file(self.hbond_interactions_bf, self.out_file_dict['hb:bf'], write=write)
-
-
-            #     else:
-                
-            #         self.charge_fraction_bf[i] = bf(self.charge_fraction[i] , self.bound_fraction[i][0])
-            #         self.write_json_file(self.charge_fraction_bf, self.out_file_dict['charge:bf'], write=write)
-
-            #         self.aro_interactions_bf[i] = bf(self.aro_interactions[i] , self.bound_fraction[i][0])
-            #         self.write_json_file(self.aro_interactions_bf, self.out_file_dict['aro:bf'], write=write)
-
-            #         self.hydro_interactions_bf[i] = bf(self.hydro_interactions[i] , self.bound_fraction[i][0])
-            #         self.write_json_file(self.hydro_interactions_bf, self.out_file_dict['hyph:bf'], write=write)
-
-            #         self.hbond_interactions_bf[i] = bf(self.hbond_interactions[i] , self.bound_fraction[i][0])
-            #         self.write_json_file(self.hbond_interactions_bf, self.out_file_dict['hb:bf'], write=write)
 
