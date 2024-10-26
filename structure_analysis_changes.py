@@ -24,7 +24,6 @@ import json
 import MDAnalysis as mda
 from MDAnalysis import transformations
 
-sys.path.insert(0, '/dartfs-hpc/rc/home/0/f006f50/labhome/JKrishna/scripts')
 from Block_analysis import *
 
 class NpEncoder(json.JSONEncoder):
@@ -271,21 +270,23 @@ class initial():
             self.sel=f"resid {self.prot_start_res_num} to {self.prot_end_res_num}"
 
             if self.pbc : 
+                
+                if self.nreps==1 : 
+                
+                    if os.path.exists(f"{rep_trajectory}/{self.traj_tag_in}.{self.traj_type}") : self.trj_dict[self.nreps-1]=f"{rep_trajectory}/{self.traj_tag_in}.{self.traj_type}"
+                    else : print(f"{self.traj_tag_in}.{self.traj_type} is missing...\n")
+                
+                else:
 
-                for i in range(self.nreps):
+                    for i in range(self.nreps):
 
-                    if i == 0 : 
-                        if os.path.exists(f"{rep_trajectory}/{self.traj_tag_in}.{self.traj_type}") : trajectory=f"{rep_trajectory}/{self.traj_tag_in}.{self.traj_type}"
-                        else : print(f"{self.traj_tag_in}.{self.traj_type} is missing...\n")
-
-                    else : 
                         if os.path.exists(f"{rep_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}") : trajectory=f"{rep_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}"
                         elif os.path.exists(f"{rep_trajectory}/{i}{self.traj_tag_in}.{self.traj_type}") : trajectory=f"{rep_trajectory}/{i}{self.traj_tag_in}.{self.traj_type}"
                         else : print(f"{self.traj_tag_in} {self.traj_type} is missing...\n")
 
-                    # print(f"Loading trajectory {i}!...\n")
+                        self.trj_dict[i] = trajectory
 
-                    self.trj_dict[i] = trajectory
+                    # print(f"Loading trajectory {i}!...\n")
 
                     # self.trj[i] = load_traj(args_dict={'trajectory':trajectory,
                     #                         'pdb':pdb,
@@ -305,43 +306,46 @@ class initial():
                     
                 # pool = Pool(processes=min(self.trj_brk, multiprocessing.cpu_count()))
                     
+                if self.nreps == 1 : 
+                    if os.path.exists(f"{rep_trajectory}/{self.traj_tag_in}.{self.traj_type}") : self.trj_dict[self.nreps-1]=f"{rep_trajectory}/{self.traj_tag_in}.{self.traj_type}"
+                    else : print(f"{self.traj_tag_in}.{self.traj_type} is missing...\n")
 
-                for i in range(self.nreps):
+                else :
 
-                    if i == 0 : 
-                        if os.path.exists(f"{rep_trajectory}/{self.traj_tag_in}.{self.traj_type}") : trajectory=f"{rep_trajectory}/{self.traj_tag_in}.{self.traj_type}"
-                        else : print(f"{self.traj_tag_in}.{self.traj_type} is missing...\n")
-
-                    else : 
+                    for i in range(self.nreps):
                         if os.path.exists(f"{rep_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}") : trajectory=f"{rep_trajectory}/{self.traj_tag_in}{i}.{self.traj_type}" 
                         elif os.path.exists(f"{rep_trajectory}/{i}{self.traj_tag_in}.{self.traj_type}") : trajectory=f"{rep_trajectory}/{i}{self.traj_tag_in}.{self.traj_type}"
                         else : print(f"{self.traj_tag_in} {self.traj_type} is missing...\n")
 
-                    args_dict={'trajectory':trajectory,
-                                'pdb':pdb,
-                                'out_dir':rep_trajectory,
-                                'tpr':self.pbc_tpr, 
-                                'traj_num':i,
-                                'out_file_tag':self.traj_tag_out,
-                                'out_file_fmt':self.traj_type}
 
-                    print(f"Wrapping trajectory {i}!...\n")
 
-                    # pool.apply_async(wrap_traj, args=args_dict)
-                    wrap_traj(args_dict)
+                        args_dict={'trajectory':trajectory,
+                                    'pdb':pdb,
+                                    'out_dir':rep_trajectory,
+                                    'tpr':self.pbc_tpr, 
+                                    'traj_num':i,
+                                    'out_file_tag':self.traj_tag_out,
+                                    'out_file_fmt':self.traj_type}
+
+                        print(f"Wrapping trajectory {i}!...\n")
+
+                        # pool.apply_async(wrap_traj, args=args_dict)
+                        wrap_traj(args_dict)
 
                 # pool.close()
                 # pool.join()
 
-                for i in range(self.nreps):
+                if self.nreps == 1 :  self.trj_dict[self.nreps-1]=f"{rep_trajectory}/{self.traj_tag_out}.{self.traj_type}"
+                else : 
+                    
+                    for i in range(self.nreps):
+                        trajectory=f"{rep_trajectory}/{self.traj_tag_out}{i}.{self.traj_type}"
 
-                    if i == 0 :  trajectory=f"{rep_trajectory}/{self.traj_tag_out}.{self.traj_type}"
-                    else : trajectory=f"{rep_trajectory}/{self.traj_tag_out}{i}.{self.traj_type}"
+                        self.trj_dict[i]=trajectory
 
                     # if i == 0 : trajectory=f"{rep_trajectory}/{self.traj_tag_out}.{self.traj_type}"
                     # else : trajectory=f"{rep_trajectory}/{self.traj_tag_out}{i}.{self.traj_type}"
 
-                    self.trj_dict[i]=trajectory
 
                     # print(f"Loading trajectory {i}!...\n")
 
@@ -508,10 +512,8 @@ class initial():
         self.hbond_interactions_re_bf={}
 
         self.p_contact_map = {}
-        self.p_contact_map_re = {}
-        # self.p_contact_distance_map = {}
+        self.p_contact_distance_map = {}
         self.l_contact_map = {}
-        self.l_contact_map_re = {}
 
         # self.num_residues = self.pdb.topology.n_residues
         self.temp = self.pdb.atom_slice(self.pdb.topology.select(self.p_sel))
@@ -537,17 +539,17 @@ class initial():
     
 ######################################-Definations for computing structure parameters-###############################    
 
-def calc_SA(trj, helix,  RMS_start, RMS_stop):
-    r0 = .10
+def calc_SA(trj, helix,  RMS_start, RMS_stop, r0:float=0.10):
 
     RMS = []
-    for i in range(RMS_start, RMS_stop+1):
-        sel = helix.topology.select("residue %s to %s and name CA" % (i, i+6))
+    for i in range(RMS_start, RMS_stop):
+        sel = helix.topology.select("resid %s to %s and name CA" % (i, i+5))
+        if len(sel) < 6 : break
         rmsd = md.rmsd(trj, helix, atom_indices=sel)
         RMS.append(rmsd)
     RMS = np.asarray(RMS)
     # Sa_sum = np.zeros((trj.n_frames))
-    Sa = (1.0-(RMS/0.10)**8)/(1-(RMS/0.10)**12)
+    Sa = (1.0-(RMS/r0)**8)/(1-(RMS/r0)**12)
 
     return Sa
 
@@ -1591,16 +1593,11 @@ def contact_map_protein_rw(trj, weights:list=[], cutoff:float=1.2, apo:bool=Fals
     # Identify contacts based on cutoff
     contact_array = np.where(dist_array < cutoff, 1, 0)
 
+    # Initialize contact and distance matrices
+    distance_matrix = np.zeros((p_residues, p_residues))
+    contact_matrix = np.zeros((p_residues, p_residues))
 
     if len(weights) > 0:
-
-        # Initialize contact and distance matrices
-        distance_matrix = np.zeros((p_residues, p_residues))
-        contact_matrix = np.zeros((p_residues, p_residues))
-
-        distance_matrix_re = np.zeros((p_residues, p_residues))
-        contact_matrix_re = np.zeros((p_residues, p_residues))
-        
         # Ensure weights are normalized
         weights = np.array(weights) / np.sum(weights)
 
@@ -1608,36 +1605,19 @@ def contact_map_protein_rw(trj, weights:list=[], cutoff:float=1.2, apo:bool=Fals
         reweighted_distances = np.dot(weights, dist_array)  # Reweight distances across frames
         reweighted_contacts = np.dot(weights, contact_array)  # Reweight contacts across frames
 
-        # Compute mean values without reweighting
-        distance_matrix[indices[:, 0], indices[:, 1]] = dist_array.mean(axis=0)
-        contact_matrix[indices[:, 0], indices[:, 1]] = contact_array.mean(axis=0)
-
         # Fill the upper triangle of the matrices with the reweighted values
-        distance_matrix_re[indices[:, 0], indices[:, 1]] = reweighted_distances
-        contact_matrix_re[indices[:, 0], indices[:, 1]] = reweighted_contacts
-
-        # Make matrices symmetric
-        distance_matrix += distance_matrix.T
-        contact_matrix += contact_matrix.T
-        distance_matrix_re += distance_matrix_re.T
-        contact_matrix_re += contact_matrix_re.T
-
-        return np.array(contact_matrix).astype(float) , np.array(contact_matrix_re).astype(float)
-
+        distance_matrix[indices[:, 0], indices[:, 1]] = reweighted_distances
+        contact_matrix[indices[:, 0], indices[:, 1]] = reweighted_contacts
     else:
-        # Initialize contact and distance matrices
-        distance_matrix = np.zeros((p_residues, p_residues))
-        contact_matrix = np.zeros((p_residues, p_residues))
-
         # Compute mean values without reweighting
         distance_matrix[indices[:, 0], indices[:, 1]] = dist_array.mean(axis=0)
         contact_matrix[indices[:, 0], indices[:, 1]] = contact_array.mean(axis=0)
 
-        # Make matrices symmetric
-        distance_matrix += distance_matrix.T
-        contact_matrix += contact_matrix.T
+    # Make matrices symmetric
+    distance_matrix += distance_matrix.T
+    contact_matrix += contact_matrix.T
 
-        return np.array(contact_matrix).astype(float)  # , np.array(distance_matrix).astype(float)
+    return np.array(contact_matrix).astype(float)  # , np.array(distance_matrix).astype(float)
 
 
 
@@ -1666,6 +1646,34 @@ def contact_map_ligand_rw(trj, ps:int, pe:int, ligand_res_index:int, weights:lis
         contact_maps.append(contact_map)
         
     return np.asarray(contact_maps).astype(float)
+
+# def contact_map_ligand_rw_1(trj, ps:int, pe:int, ligand_res_index:int, weights:list=[], cutoff=0.6):
+#     # Create pairs for compute_contacts
+#     pairs = [[i, ligand_res_index] for i in range(ps, pe+1)]
+#     pairs = np.array(pairs)
+
+#     # Compute distances
+#     dists = md.compute_contacts(trj, pairs, scheme='closest-heavy')[0]
+
+#     # Convert to float
+#     dists = dists.astype(float)
+
+#     # Compute contact maps
+#     contacts = np.where(dists < cutoff, 1, 0)
+
+#     # Compute pairwise contacts
+#     pairwise_contacts = np.dot(contacts, contacts.T)
+
+#     # Compute final contact map
+#     final_contacts = np.where(pairwise_contacts == 2, 1, 0)
+
+#     # Apply weights if provided
+#     if len(weights) > 0:
+#         final_contacts = np.dot(final_contacts, weights)
+#     else:
+#         final_contacts = np.average(final_contacts, axis=1)
+
+#     return final_contacts.astype(float)
 
 def contact_map_ligand_2(trj, ps:int, pe:int, ligand_res_index:int, weights:list=[], cutoff=0.6):
     # Create pairs for compute_contacts
@@ -1725,18 +1733,13 @@ def contact_map_ligand_rw_2(trj, ps:int, pe:int, ligand_res_index:int, weights:l
         # Reweight contacts by applying weights to each frame
         reweighted_contacts = contacts * weights[:, np.newaxis]
         
-        dual = (contacts.T @ contacts) / len(contacts)
-
         # Compute reweighted dual contact map
-        dual_re = (reweighted_contacts.T @ contacts) / np.sum(weights)
-
-        return np.array(dual).astype(float), np.array(dual_re).astype(float)
-    
+        dual = (reweighted_contacts.T @ contacts) / np.sum(weights)
     else:
         # If no weights provided, compute dual contact map without reweighting
         dual = (contacts.T @ contacts) / len(contacts)
 
-        return dual
+    return dual
 
 
 
@@ -2000,7 +2003,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     # ps.restrict_atoms(ps.topology.select(f"resid {self.prot_start_res_num} to {self.prot_end_res_num} and name CA"))
                     # ps=self.p_trj[i].restrict_atoms(self.p_trj[i].topology.select(f"resid {self.prot_start_res_num} to {self.prot_end_res_num} and name CA"))
                     # ps.center_coordinates()
-                    self.sa[i] = calc_SA(ps,self.helix, self.prot_start_res_num, self.prot_end_res_num-6)
+                    self.sa[i] = calc_SA(ps,self.helix, self.prot_start_res_num, self.prot_end_res_num)
                     
                     self.write_json_file(self.sa, self.out_file_dict['sa'], write=write)
                     del ps
@@ -2019,7 +2022,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     # ps.restrict_atoms(ps.topology.select(f"resid {self.prot_start_res_num} to {self.prot_end_res_num} and name CA"))
                     # ps=self.p_trj[i].restrict_atoms(self.p_trj[i].topology.select(f"resid {self.prot_start_res_num} to {self.prot_end_res_num} and name CA"))
                     # ps.center_coordinates()
-                    self.pp_rmsd[i] = calc_SA(ps,self.pp, self.prot_start_res_num, self.prot_end_res_num-6)
+                    self.pp_rmsd[i] = calc_SA(ps,self.pp, self.prot_start_res_num, self.prot_end_res_num)
                     
                     self.write_json_file(self.pp_rmsd, self.out_file_dict['pp_rmsd'], write=write)
                     del ps
@@ -2082,7 +2085,9 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     rep_range=[i for i in in_reps] 
 
                     print(f"Claculating contact matrix...\n")
+                    # self.p_contact_map, self.p_contact_distance_map = zip(*p.map(self.p_cm, rep_range))
                     self.p_contact_map = p.map(self.p_cm, rep_range)
+
                     self.p_contact_map = dict_conv(self.p_contact_map, in_reps, rest=rest)
                     # self.p_contact_distance_map = dict_conv(self.p_contact_distance_map, in_reps, rest=rest)
 
@@ -2106,7 +2111,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     # ps.restrict_atoms(ps.topology.select(f"resid {self.prot_start_res_num} to {self.prot_end_res_num} and name CA"))
                     # ps=self.p_trj[i].restrict_atoms(self.p_trj[i].topology.select(f"resid {self.prot_start_res_num} to {self.prot_end_res_num} and name CA"))
                     # ps.center_coordinates()
-                    self.sa[i] = calc_SA(ps,self.helix, self.prot_start_res_num, self.prot_end_res_num-6)
+                    self.sa[i] = calc_SA(ps,self.helix, self.prot_start_res_num, self.prot_end_res_num)
                     
                     self.write_json_file(self.sa, self.out_file_dict['sa'], write=write)
                     del ps
@@ -2123,7 +2128,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     # ps.restrict_atoms(ps.topology.select(f"resid {self.prot_start_res_num} to {self.prot_end_res_num} and name CA"))
                     # ps=self.p_trj[i].restrict_atoms(self.p_trj[i].topology.select(f"resid {self.prot_start_res_num} to {self.prot_end_res_num} and name CA"))
                     # ps.center_coordinates()
-                    self.pp_rmsd[i] = calc_SA(ps, self.pp, self.prot_start_res_num, self.prot_end_res_num-6)
+                    self.pp_rmsd[i] = calc_SA(ps, self.pp, self.prot_start_res_num, self.prot_end_res_num)
                     
                     self.write_json_file(self.pp_rmsd, self.out_file_dict['pp_rmsd'], write=write)
                     del ps
@@ -2211,7 +2216,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         self.write_json_file(self.kd_raw, self.out_file_dict['kd_raw'], write=write)
 
                         self.write_json_file(self.bound_fraction, self.out_file_dict['bf'], write=write)
-                        # self.write_json_file(self.contact_matrix, self.out_file_dict['cm'], write=write)
+                        self.write_json_file(self.contact_matrix, self.out_file_dict['cm'], write=write)
 
                         # self.kd_bf_time = zip(*p.map(self.kd_time_out,rep_range))
                         # self.kd_bf_time = dict_conv(self.kd_bf_time, in_reps, rest=rest)
@@ -2239,7 +2244,7 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                         self.write_json_file(self.average_ligand_contacts, self.out_file_dict['lc'], write=write)
                         self.write_json_file(self.kd, self.out_file_dict['kd'], write=write)
                         self.write_json_file(self.bound_fraction, self.out_file_dict['bf'], write=write)
-                    # self.write_json_file(self.contact_matrix, self.out_file_dict['cm'], write=write)
+                        self.write_json_file(self.contact_matrix, self.out_file_dict['cm'], write=write)
                         # reset_dict([self.average_ligand_contacts,self.contact_matrix,self.kd_bf_time ])
                 
                 for i in in_reps : 
@@ -2360,16 +2365,16 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
                     if self.analysis_dict['p_cm'] : 
 
                         s_time = time.perf_counter()
-                        
                         print(f"Claculating protein contact matrix...\n")
-                        self.p_contact_map, self.p_contact_map_re = zip(*p.map(self.p_cm, rep_range))
+                        # self.p_contact_map, self.p_contact_distance_map = zip(*p.map(self.p_cm, rep_range))
+                        self.p_contact_map = p.map(self.p_cm, rep_range)
+
                         self.p_contact_map = dict_conv(self.p_contact_map, in_reps, rest=rest)
-                        self.p_contact_map_re = dict_conv(self.p_contact_map_re, in_reps, rest=rest)
+                        # self.p_contact_distance_map = dict_conv(self.p_contact_distance_map, in_reps, rest=rest)
 
-                        self.write_json_file(self.p_contact_map_re, self.out_file_dict['p_cm_rw'], write=write)
-                        self.write_json_file(self.p_contact_map, self.out_file_dict['p_cm'], write=write)
-
-                        reset_dict([self.p_contact_map,self.p_contact_map_re])
+                        self.write_json_file(self.p_contact_map, self.out_file_dict['p_cm_rw'], write=write)
+                        # self.write_json_file(self.p_contact_distance_map, self.out_file_dict['p_cd'], write=write)
+                        reset_dict([self.p_contact_map,self.p_contact_distance_map])
                         e_time = time.perf_counter()
                         print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
@@ -2377,14 +2382,11 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
 
                         s_time = time.perf_counter()
                         print(f"Claculating ligand-protein dual contact matrix...\n")
-                        self.l_contact_map, self.l_contact_map_re = zip(*p.map(self.l_cm, rep_range))
+                        self.l_contact_map = p.map(self.l_cm, rep_range)
                         self.l_contact_map = dict_conv(self.l_contact_map, in_reps, rest=rest)
-                        self.l_contact_map_re = dict_conv(self.l_contact_map_re, in_reps, rest=rest)
 
-                        self.write_json_file(self.l_contact_map_re, self.out_file_dict['l_cm_rw'], write=write)
-                        self.write_json_file(self.l_contact_map, self.out_file_dict['l_cm'], write=write)
-
-                        reset_dict([self.l_contact_map,self.l_contact_map_re])
+                        self.write_json_file(self.l_contact_map, self.out_file_dict['l_cm_rw'], write=write)
+                        reset_dict(self.l_contact_map)
                         e_time = time.perf_counter()
                         print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
@@ -2471,15 +2473,15 @@ class ligand_interactions(contact_matrix, charge, aromatic, hydrophobic, hbond):
 
                         s_time = time.perf_counter()
                         print(f"Claculating protein contact matrix...\n")
+                        # self.p_contact_map, self.p_contact_distance_map = zip(*p.map(self.p_cm, rep_range))
                         self.p_contact_map = p.map(self.p_cm, rep_range)
+
                         self.p_contact_map = dict_conv(self.p_contact_map, in_reps, rest=rest)
                         # self.p_contact_distance_map = dict_conv(self.p_contact_distance_map, in_reps, rest=rest)
 
                         self.write_json_file(self.p_contact_map, self.out_file_dict['p_cm'], write=write)
                         # self.write_json_file(self.p_contact_distance_map, self.out_file_dict['p_cd'], write=write)
-                        # reset_dict([self.p_contact_map,self.p_contact_distance_map])
-                        reset_dict(self.p_contact_map)
-
+                        reset_dict([self.p_contact_map,self.p_contact_distance_map])
                         e_time = time.perf_counter()
                         print(f'Time taken : {time.strftime("%H:%M:%S", time.gmtime(e_time - s_time))} seconds\n')
 
